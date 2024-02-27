@@ -1,0 +1,21 @@
+{
+  "full_name": "John Doe",
+  "email": "john@example.com",
+  "project_name": "My DAB pipeline",
+  "project_slug": "{{ cookiecutter.project_name | slugify(separator='-') }}",
+  "package_name": "{{ cookiecutter.project_name | slugify(separator='_') }}",
+  "project_short_description": "Databricks Asset Bundle project for building a deployable pipeline.",
+  "databricks_host": "https://adb-4660235474036080.0.azuredatabricks.net",
+  "__prompts__": {
+    "full_name": "Author full name",
+    "email": "Author email",
+    "project_short_description": "Short description",
+    "project_name": "Stylized name or title of your project",
+    "project_slug": "Root folder of your project (usually dash separated)",
+    "package_name": "Main package name (snake case)",
+    "databricks_host": "URL of databricks workspace for deployments"
+  },
+  "_extensions": ["cookiecutter.extensions.SlugifyExtension"],
+  "_jinja2_env_vars": {"lstrip_blocks": true, "trim_blocks": true},
+  "_new_lines": "\n"
+}

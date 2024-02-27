@@ -1,0 +1,4 @@
+- [ ] Ensure project slug allows letters, dashes and underscores but not spaces
+- [ ] Offer default project_name as a processed project_slug ensuring snakecase
+- [ ] Pick up databricks host from default config if it exists
+- [ ] In postprocesssing init git, install pre-commit hooks

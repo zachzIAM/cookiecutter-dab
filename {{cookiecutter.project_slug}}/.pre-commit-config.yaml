@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-yaml
+        types: [yaml]
+      - id: check-toml
+        types: [toml]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-ast
+      - id: check-added-large-files
+        stages: [push]
+        args: [--maxkb=10000]
+  - repo: local
+    hooks:
+      - id: darglint
+        name: darglint
+        entry: darglint
+        language: system
+        types: [python]
+        stages: [manual]
+      - id: linting
+        name: linting
+        entry: make lint
+        language: system
+      - id: formatting
+        name: formatting
+        entry: make format
+        language: system
+      - id: deps
+        name: deps
+        entry: make deps
+        language: system
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.3
+    hooks:
+      - id: prettier

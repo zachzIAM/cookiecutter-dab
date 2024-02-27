@@ -1,0 +1,27 @@
+# This is a Databricks asset bundle definition for {{ cookiecutter.package_name }}.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: {{ cookiecutter.package_name }}
+
+artifacts:
+  default:
+    type: whl
+    build: poetry build
+    path: .
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: {{ cookiecutter.databricks_host }}
+      root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
+
+  prd:
+    mode: production
+    workspace:
+      host: {{ cookiecutter.databricks_host }}
+      root_path: /Shared/.bundle/${bundle.target}/${bundle.name}
