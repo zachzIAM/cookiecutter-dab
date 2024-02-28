@@ -11,10 +11,10 @@ class DatabricksHostExtension(Extension):
         def default_databricks_host() -> Optional[str]:
             config = ConfigParser()
             config.read(find_databrickscfg())
-            return config.defaults().get("host")
+            return config.defaults().get("host", "null")
 
         def find_databrickscfg() -> str:
             path = Path().home() / ".databrickscfg"
             return path.as_posix()
 
-        environment.filters['default_databricks_host'] = default_databricks_host
+        environment.globals.update(default_databricks_host=default_databricks_host)
