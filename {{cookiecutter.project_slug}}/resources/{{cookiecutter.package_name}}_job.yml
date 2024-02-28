@@ -1,0 +1,36 @@
+# The main job for response_pipeline.
+resources:
+  jobs:
+    {{ cookiecutter.package_name }}_job:
+      name: {{ cookiecutter.package_name }}_job
+
+      schedule:
+        # Run every day at 8:37 AM
+        quartz_cron_expression: "44 37 8 * * ?"
+        timezone_id: UTC
+
+      email_notifications:
+        on_failure:
+          - {{ cookiecutter.email }}
+
+      tasks:
+        - task_key: main_task
+          job_cluster_key: job_cluster
+          python_wheel_task:
+            package_name: {{ cookiecutter.package_name }}
+            entry_point: example
+          libraries:
+            # By default we just include the .whl file generated for the response_pipeline package.
+            # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
+            # for more information on how to add other libraries.
+            - whl: ../dist/*.whl
+
+      job_clusters:
+        - job_cluster_key: job_cluster
+          new_cluster:
+            spark_version: 13.3.x-scala2.12
+            node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}
+
+            autoscale:
+              min_workers: 1
+              max_workers: 2
