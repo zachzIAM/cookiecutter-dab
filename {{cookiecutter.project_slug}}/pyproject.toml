@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "{{ cookiecutter.project_short_description }}"
 authors = ["{{ cookiecutter.full_name }} <{{ cookiecutter.email }}>"]
 readme = "README.md"
+licence = "{{ cookiecutter.open_source_license }}"
 
 [tool.poetry.urls]
 Changelog = "https://github.com/NinetyOne-GitHub/f4-analyst-views/releases"

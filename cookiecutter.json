@@ -5,6 +5,12 @@
   "project_slug": "{{ cookiecutter.project_name | slugify(separator='-') }}",
   "package_name": "{{ cookiecutter.project_name | slugify(separator='_') }}",
   "project_short_description": "Databricks Asset Bundle project for building a deployable pipeline.",
+  "open_source_license": [
+    "MIT",
+    "BSD",
+    "Apache Software License 2.0",
+    "Proprietary"
+  ],
   "databricks_host": "{{ default_databricks_host() }}",
   "__prompts__": {
     "full_name": "Author full name",
