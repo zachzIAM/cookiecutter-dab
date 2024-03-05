@@ -15,6 +15,13 @@ ruff = "^0.3.0"
 pytest = "^8.0.2"
 pytest-cov = "^4.1.0"
 
+[tool.pytest.ini_options]
+addopts = "-v --tb=short"
+norecursedirs = [
+    ".git",
+    "*/{{cookiecutter.project_slug}}/*",
+]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
