@@ -1,7 +1,7 @@
 {
-  "full_name": "John Doe",
-  "email": "john@example.com",
-  "project_name": "My DAB pipeline",
+  "full_name": "James Quant",
+  "email": "james.quant@example.com",
+  "project_name": "DAB Pipeline",
   "project_slug": "{{ cookiecutter.project_name | slugify(separator='-') }}",
   "package_name": "{{ cookiecutter.project_name | slugify(separator='_') }}",
   "project_short_description": "Databricks Asset Bundle project for building a deployable pipeline.",
