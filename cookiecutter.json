@@ -1,25 +1,27 @@
 {
-  "full_name": "James Quant",
+  "author": "James Quant",
   "email": "james.quant@example.com",
   "project_name": "DAB Pipeline",
   "project_slug": "{{ cookiecutter.project_name | slugify(separator='-') }}",
   "package_name": "{{ cookiecutter.project_name | slugify(separator='_') }}",
   "project_short_description": "Databricks Asset Bundle project for building a deployable pipeline.",
+  "databricks_host": "{{ default_databricks_host() }}",
+  "automated_sphinx_docs": ["y", "n"],
   "open_source_license": [
     "MIT",
     "BSD",
     "Apache Software License 2.0",
     "Proprietary"
   ],
-  "databricks_host": "{{ default_databricks_host() }}",
   "__prompts__": {
-    "full_name": "Author full name",
-    "email": "Author email",
-    "project_short_description": "Short description",
+    "author": "Author or team name",
+    "email": "Author or team email address",
     "project_name": "Stylized name or title of your project",
     "project_slug": "Root folder of your project (usually dash separated)",
     "package_name": "Main package name (snake case)",
-    "databricks_host": "URL of databricks workspace for deployments"
+    "project_short_description": "Short description",
+    "databricks_host": "URL of databricks workspace for deployments",
+    "automated_sphinx_docs": "Automated build and deployment of documentation with Sphinx"
   },
   "_extensions": ["cookiecutter.extensions.SlugifyExtension", "local_extensions.DatabricksHostExtension"],
   "_jinja2_env_vars": {"lstrip_blocks": true, "trim_blocks": true},
