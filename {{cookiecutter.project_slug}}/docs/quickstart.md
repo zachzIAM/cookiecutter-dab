@@ -59,7 +59,7 @@ insecure = True
 Clone the repo via git
 
 ```console
-$ git clone https://github.com/{{cookiecutter.github_user}}/{{cookiecutter.project_slug}}
+$ git clone https://github.com/{{cookiecutter.github_username}}/{{cookiecutter.project_slug}}
 ```
 
 Install the package with development requirements:

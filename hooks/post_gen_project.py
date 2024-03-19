@@ -2,12 +2,6 @@ import os
 import shutil
 
 
-def remove_open_source_files():
-    file_names = ["LICENSE"]
-    for file_name in file_names:
-        os.remove(file_name)
-
-
 def delete_docs_folder_if_requested():
     generate_docs = "{{ cookiecutter.automated_sphinx_docs }}".lower()
     sphinx_docs_folder = "docs"
@@ -44,13 +38,43 @@ def delete_issue_template_folder_if_requested():
             )
 
 
-def main():
-    if "{{ cookiecutter.open_source_license }}" == "Not open source":
-        remove_open_source_files()
+def delete_py_package_if_requested():
+    inc_python_package = "{{ cookiecutter.inc_python_package }}".lower()
+    py_package_folders = [
+        "src/{{ cookiecutter.package_name }}",
+        "tests",
+        "examples",
+        "scratch",
+    ]
+    py_package_related_files = [
+        ".github/workflows/constraints.txt",
+        ".github/workflows/labeler.yml",
+        ".github/workflows/release.yml",
+        ".github/workflows/tests.yml",
+        ".github/dependabot.yml",
+        ".github/labels.yml",
+        ".github/release-drafter.yml",
+        ".darglint",
+        ".pre-commit-config.yaml",
+        "CONTRIBUTING.md",
+        "Makefile",
+        "noxfile.py",
+        "pyproject.toml",
+    ]
 
+    if inc_python_package == "n":
+        for i in py_package_folders:
+            shutil.rmtree(i)
+        for i in py_package_related_files:
+            os.remove(i)
+
+
+def main():
     delete_docs_folder_if_requested()
 
     delete_issue_template_folder_if_requested()
+
+    delete_py_package_if_requested()
 
 
 if __name__ == "__main__":

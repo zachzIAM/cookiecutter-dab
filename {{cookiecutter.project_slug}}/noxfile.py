@@ -1,6 +1,8 @@
 """Nox sessions."""
+
 import os
 import shlex
+import shutil
 import sys
 from pathlib import Path
 from textwrap import dedent
@@ -20,14 +22,18 @@ except ImportError:
 
 
 package = "{{ cookiecutter.package_name }}"
-python_versions = ["3.12", "3.11", "3.10"]
+python_versions = ["3.12", "3.11"]
 nox.needs_version = ">= 2021.6.6"
 nox.options.sessions = (
     "pre-commit",
     "safety",
+    "mypy",
     "tests",
     "typeguard",
+    {% if cookiecutter.automated_sphinx_docs.lower() != 'n' %}
     "xdoctest",
+    "docs-build",
+    {% endif %}
 )
 
 
@@ -105,7 +111,7 @@ def activate_virtualenv_in_precommit_hooks(session: Session) -> None:
                 break
 
 
-@session(name="pre-commit", python=python_versions)
+@session(name="pre-commit", python=python_versions[0])
 def precommit(session: Session) -> None:
     """Lint using pre-commit."""
     args = session.posargs or [
@@ -118,19 +124,30 @@ def precommit(session: Session) -> None:
         "ruff",
         "darglint",
         "pre-commit",
-        "pre-commit-hooks",
+        "pre-commit-hooks",        
     )
     session.run("pre-commit", *args)
     if args and args[0] == "install":
         activate_virtualenv_in_precommit_hooks(session)
 
 
-@session(python=python_versions)
+@session(python=python_versions[0])
 def safety(session: Session) -> None:
     """Scan dependencies for insecure packages."""
     requirements = session.poetry.export_requirements()
     session.install("safety")
     session.run("safety", "check", "--full-report", f"--file={requirements}")
+
+
+@session(python=python_versions)
+def mypy(session: Session) -> None:
+    """Static type-check using mypy."""
+    args = session.posargs or ["src", "tests", "docs/conf.py"]
+    session.install(".")
+    session.install("mypy", "pytest")
+    session.run("mypy", *args)
+    if not session.posargs:
+        session.run("mypy", f"--python-executable={sys.executable}", "noxfile.py")
 
 
 @session(python=python_versions)
@@ -145,7 +162,7 @@ def tests(session: Session) -> None:
             session.notify("coverage", posargs=[])
 
 
-@session(python=python_versions)
+@session(python=python_versions[0])
 def coverage(session: Session) -> None:
     """Produce the coverage report."""
     args = session.posargs or ["report"]
@@ -158,14 +175,14 @@ def coverage(session: Session) -> None:
     session.run("coverage", *args)
 
 
-@session(python=python_versions)
+@session(python=python_versions[0])
 def typeguard(session: Session) -> None:
     """Runtime type checking using Typeguard."""
     session.install(".")
     session.install("pytest", "typeguard", "pygments")
     session.run("pytest", f"--typeguard-packages={package}", *session.posargs)
 
-
+{% if cookiecutter.automated_sphinx_docs.lower() != 'n' %}
 @session(python=python_versions)
 def xdoctest(session: Session) -> None:
     """Run examples with xdoctest."""
@@ -179,3 +196,45 @@ def xdoctest(session: Session) -> None:
     session.install(".")
     session.install("xdoctest[colors]")
     session.run("python", "-m", "xdoctest", *args)
+
+
+@session(name="docs-build", python=python_versions[0])
+def docs_build(session: Session) -> None:
+    """Build the documentation artifacts only."""
+    args = session.posargs or ["docs", "docs/_build"]
+    if not session.posargs and "FORCE_COLOR" in os.environ:
+        args.insert(0, "--color")
+
+    session.install(".")
+    session.install("sphinx", "furo", "myst-parser")
+
+    build_dir = Path("docs", "_build")
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
+
+    # Generate API docs
+    session.run(
+        "sphinx-apidoc", "-fMe", "-d", "2", "-o", "docs/source", "src/{{ cookiecutter.package_name }}"
+    )
+    # Build the html docs
+    session.run("sphinx-build", *args)
+
+
+@session(python=python_versions[0])
+def docs(session: Session) -> None:
+    """Build and serve the documentation with live reloading on file changes."""
+    args = session.posargs or ["--open-browser", "docs", "docs/_build"]
+    session.install(".")
+    session.install("sphinx", "sphinx-autobuild", "furo", "myst-parser")
+
+    build_dir = Path("docs", "_build")
+    if build_dir.exists():
+        shutil.rmtree(build_dir)
+
+    # Generate API docs
+    session.run(
+        "sphinx-apidoc", "-fMe", "-d", "2", "-o", "docs/source", "src/perf_py_pkg"
+    )
+    # Build and serve the html docs with live reloading
+    session.run("sphinx-autobuild", *args)
+{% endif %}

@@ -1,3 +1,4 @@
+---{% raw %}
 # Workflow for building and deploying sphinx documentation to GitHub Pages
 name: Documentation
 
@@ -76,4 +77,5 @@ jobs:
     # Deploy to the github-pages environment
     environment:
       name: github-pages
-      url: {{ "${{" }} steps.deployment.outputs.page_url {{ "}}" }}
+      url: ${{ steps.deployment.outputs.page_url }}
+{% endraw %}

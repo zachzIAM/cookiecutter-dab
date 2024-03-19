@@ -10,7 +10,7 @@ BUILDDIR      = _build
 APIDOC		  = sphinx-apidoc
 APIDOCMODPATH = ../src/{{ cookiecutter.package_name }}
 APIDOCOPTS    ?= -fMe -d 2
-# APIDOCEXCLPTN ?= ../src/qai_cache/utils.py
+# APIDOCEXCLPTN ?= ../src/{{ cookiecutter.package_name }}/utils.py
 
 
 # Put it first so that "make" without argument is like "make help".

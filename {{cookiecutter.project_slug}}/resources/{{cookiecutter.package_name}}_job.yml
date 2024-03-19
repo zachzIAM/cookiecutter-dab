@@ -38,8 +38,9 @@ resources:
         - task_key: notebook_task
           job_cluster_key: job_cluster
           notebook_task:
-            notebook_path: ../src/{{ cookiecutter.package_name }}/notebook.ipynb
+            notebook_path: ../src/notebook.ipynb
 
+        {% if cookiecutter.inc_python_package != 'n' %}
         - task_key: main_task
           depends_on:
             - task_key: notebook_task
@@ -52,7 +53,7 @@ resources:
             # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
             # for more information on how to add other libraries.
             - whl: ../dist/*.whl
-
+        {% endif %}
       job_clusters:
         - job_cluster_key: job_cluster
           new_cluster:
@@ -60,12 +61,16 @@ resources:
             spark_version: 14.3.x-cpu-ml-scala2.12
             spark_conf:
               spark.databricks.cluster.profile: singleNode
-              spark.master: local[*, 4]
-            {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}azure_attributes{% else -%}aws_attributes{% endif %}:
-              first_on_demand: 1
-              availability: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}ON_DEMAND_AZURE{% else -%}SPOT_WITH_FALLBACK{% endif %}
-            node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}
-            driver_node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}
+              spark.master: local[*, 4]  
+            {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}
+            azure_attributes:
+            {% else -%}
+            aws_attributes:
+            {% endif %}
+              first_on_demand: 1  
+              availability: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}ON_DEMAND_AZURE{% else -%}SPOT_WITH_FALLBACK{% endif %}  
+            node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}  
+            driver_node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}  
             enable_elastic_disk: true
             {% if cookiecutter.databricks_cluster_policy_id != '' %}
             policy_id: {{ cookiecutter.databricks_cluster_policy_id }}

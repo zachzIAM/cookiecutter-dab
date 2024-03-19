@@ -1,15 +1,35 @@
-from {{ cookiecutter.package_name }} import main
 
-def test_get_table(spark):
-    # arrange
-    expected_catalog = "samples"
-    expected_schema = "nyctaxi"
-    expected_table = "trips"
+import pytest
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StringType, StructField, StructType
+from {{ cookiecutter.package_name }} import main.get_table, main.hello_world
 
-    # act
-    result = main.get_table(catalog=expected_catalog, schema=expected_schema, table=expected_table)
+@pytest.fixture(scope="session")
+def spark_session():
+    spark = SparkSession.builder.master("local").appName("PySparkTests").getOrCreate()
+    yield spark
+    spark.stop()
 
-    # assert
-    assert result.count() > 0
-    assert result.columns == ["column1", "column2", ...]  # Add expected column names here
-    # Add more assertions as needed
+@pytest.fixture(scope="session")
+def setup_sample_table(spark_session):
+    # Mimic 'samples.nyctaxi.trips' table
+    schema = StructType([StructField("trip_distance", StringType(), True)])
+    data = [("1.2",), ("3.4",)]
+    df = spark_session.createDataFrame(data, schema)
+    df.createOrReplaceTempView("samples.nyctaxi.trips")
+
+@pytest.fixture(scope="session")
+def setup_hello_world_view(spark_session):
+    # Temp view for testing hello_world function
+    spark_session.sql("SELECT 'World!' as greeting").createOrReplaceTempView("hello_world")
+
+def test_get_table(spark_session, setup_sample_table):
+    df = get_table()
+    assert df.columns == ["trip_distance"]
+    assert df.count() == 2
+
+def test_hello_world(spark_session, setup_hello_world_view):
+    greeting_df = hello_world()
+    expected_data = [("World!",)]
+    actual_data = [row.asDict() for row in greeting_df.collect()]
+    assert actual_data == [{'greeting': 'World!'}]

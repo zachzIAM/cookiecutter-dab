@@ -1,11 +1,15 @@
-# Fixtures
+# Examples
 
 This folder is reserved for examples how to use the package, such as jupyter notebook files importing the package.
 
 It should contain a number of code snippets explaining how to use the package and demonstrating its functionality.
 
 ```
-import {{ cookiecutter.package_name }}
-...
-...
+from {{ cookiecutter.package_name }} import main
+```
+```
+main.get_taxis().show(10)
+```
+```
+main.hello_world(name="{{cookiecutter.author}}").show()
 ```

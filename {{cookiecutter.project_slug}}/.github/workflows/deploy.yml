@@ -12,10 +12,11 @@ on:
 jobs:
   deploy:
     name: "Deploy bundle"
-    runs-on: [self-hosted, linux]
     # set environment to 'prd' if main branch is pushed, otherwise set to 'dev'
     environment: {{ "${{" }} github.ref == 'refs/heads/main' && 'prd' || 'dev' {{ "}}" }}
 
+    {% if cookiecutter.require_github_self_hosted_runner.lower() != 'n' %}
+    runs-on: [self-hosted, linux]
     # Use the Research Team maintained Docker image
     container:
       image: "nexus.ny1.ninetyone.com:8442/run-python:latest"
@@ -26,6 +27,7 @@ jobs:
       credentials:
         username: uploader
         password: {{ "${{" }} secrets.UPLOADER_PASSWORD {{ "}}" }}
+    {% endif %}
 
     steps:
       - name: Check out the repository
