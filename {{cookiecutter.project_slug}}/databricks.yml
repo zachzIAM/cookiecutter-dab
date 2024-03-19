@@ -3,18 +3,46 @@
 bundle:
   name: {{ cookiecutter.package_name }}
 
+include:
+  - resources/*.yml
+
+{% if cookiecutter.inc_python_package != 'n' %}
 artifacts:
   default:
     type: whl
     build: poetry build
     path: .
+{% endif %}
 
-include:
-  - resources/*.yml
+variables:
+  permission_group_name:
+    description: "The name of the Databricks group to which the bundle can be managed."
+    default: {{ cookiecutter.databricks_permission_group }} #"SG-NinetyOne-4Factor-Dev-S Databricks-UC Quant-Developer"
+  webhook_notifications_id:
+    description: "The ID of the webhook to use for notifications."
+    default: {{ cookiecutter.databricks_webhook_notification_id }} #"3c07954e-40c4-4669-8d54-e18ce2252c4c"
+  env_tag:
+    description: "The environment tag to use for the bundle."
+    default: "dev"
+  quartz_cron_expression:
+    description: "The cron expression to use for scheduling the job."
+    default: "46 0 2 * * ?" #  Run every day at 02:00
+  pause_status:
+    description: "The status to use for pausing job schedules and triggers."
+    default: "PAUSED"
+  job_cluster_policy_id:
+    description: "The ID of the job cluster policy to use for the job."
+    default: {{ cookiecutter.databricks_cluster_policy_id }} #"001C18F548295AD6" # single node policy
+  git_url:
+    description: "The URL of the Git repository to use for the bundle."
+    default: "https://github.com/{{ cookiecutter.github_username }}/{{ cookiecutter.project_slug }}"
+  git_branch:
+    description: "The name of the Git branch to use for the bundle."
+    default: "dev"
 
 targets:
+  # The 'dev' target, for development purposes. This target is the default.
   dev:
-    mode: development
     default: true
     workspace:
       host: {{ cookiecutter.databricks_host }}
@@ -22,6 +50,10 @@ targets:
 
   prd:
     mode: production
+    variables:
+      webhook_notifications_id: "0eefed99-6b54-47b3-9f51-1f5d446b58e6"
+      env_tag: "prd"
+      pause_status: "UNPAUSED"
     workspace:
       host: {{ cookiecutter.databricks_host }}
       root_path: /Shared/.bundle/${bundle.target}/${bundle.name}

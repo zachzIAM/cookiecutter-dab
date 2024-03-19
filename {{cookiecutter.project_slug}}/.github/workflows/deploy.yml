@@ -1,0 +1,68 @@
+name: "Deploy DAB"
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: "Deploy bundle"
+    # set environment to 'prd' if main branch is pushed, otherwise set to 'dev'
+    environment: {{ "${{" }} github.ref == 'refs/heads/main' && 'prd' || 'dev' {{ "}}" }}
+
+    {% if cookiecutter.require_github_self_hosted_runner.lower() != 'n' %}
+    runs-on: [self-hosted, linux]
+    # Use the Research Team maintained Docker image
+    container:
+      image: "nexus.ny1.ninetyone.com:8442/run-python:latest"
+      env:
+        DOCKER_HOST: unix:///run/user/1000/docker.sock
+      volumes:
+        - /run/user/1000/docker.sock:/run/user/1000/docker.sock
+      credentials:
+        username: uploader
+        password: {{ "${{" }} secrets.UPLOADER_PASSWORD {{ "}}" }}
+    {% endif %}
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # Install unzip and curl packages
+      - name: Install unzip and curl
+        shell: bash
+        run: |
+          apt-get update && apt-get install unzip libterm-readline-perl-perl -y
+
+      # Install databricks CLI
+      - name: Install databricks CLI
+        shell: bash
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      # Extract the branch name from the GITHUB_REF
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      # Validate the Databricks bundle
+      - name: Validate bundle
+        env:
+          DATABRICKS_HOST: {{ "${{" }} vars.DATABRICKS_HOST {{ "}}" }}
+          DATABRICKS_TOKEN: {{ "${{" }} secrets.DATABRICKS_TOKEN {{ "}}" }}
+        working-directory: .
+        run: databricks bundle validate
+
+      # Deploy the bundle to the "dev" target from databricks.yml
+      - name: Deploy bundle
+        env:
+          DATABRICKS_HOST: {{ "${{" }} vars.DATABRICKS_HOST {{ "}}" }}
+          DATABRICKS_TOKEN: {{ "${{" }} secrets.DATABRICKS_TOKEN {{ "}}" }}
+        working-directory: .
+        run: databricks bundle deploy --target {{ "${{" }} vars.DATABRICKS_TARGET {{ "}}" }} --var="git_branch={{ "${{" }} steps.extract_branch.outputs.branch {{ "}}" }}"

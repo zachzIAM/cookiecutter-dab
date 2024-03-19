@@ -1,36 +1,93 @@
-# The main job for response_pipeline.
 resources:
   jobs:
-    {{ cookiecutter.package_name }}_job:
-      name: {{ cookiecutter.package_name }}_job
+    {{ cookiecutter.project_slug }}-job:
+      name: {{ cookiecutter.project_slug }}-job
+
+      {% if cookiecutter.databricks_permission_group != '' %}
+      permissions:
+        - group_name: ${var.permission_group_name}
+          level: CAN_MANAGE
+      {% endif %}
+
+      {% if cookiecutter.databricks_webhook_notification_id != '' %}
+      webhook_notifications:
+        on_failure:
+          - id: ${var.webhook_notifications_id}
+        on_duration_warning_threshold_exceeded:
+          - id: ${var.webhook_notifications_id}
+      {% endif %}
+
+      # The job will be terminated if it runs for more than 5 hours.
+      timeout_seconds: 18000
+      health:
+        rules:
+          - metric: RUN_DURATION_SECONDS
+            op: GREATER_THAN
+            value: 10800
 
       schedule:
-        # Run every day at 8:37 AM
-        quartz_cron_expression: "44 37 8 * * ?"
+        quartz_cron_expression: ${var.quartz_cron_expression}
         timezone_id: UTC
+        pause_status: ${var.pause_status}
 
       email_notifications:
         on_failure:
           - {{ cookiecutter.email }}
 
       tasks:
+        - task_key: notebook_task
+          job_cluster_key: job_cluster
+          notebook_task:
+            notebook_path: ../src/notebook.ipynb
+
+        {% if cookiecutter.inc_python_package != 'n' %}
         - task_key: main_task
+          depends_on:
+            - task_key: notebook_task
           job_cluster_key: job_cluster
           python_wheel_task:
             package_name: {{ cookiecutter.package_name }}
-            entry_point: example
+            entry_point: main
           libraries:
-            # By default we just include the .whl file generated for the response_pipeline package.
+            # By default we just include the .whl file generated for the {{ cookiecutter.package_name }} package.
             # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
             # for more information on how to add other libraries.
             - whl: ../dist/*.whl
-
+        {% endif %}
       job_clusters:
         - job_cluster_key: job_cluster
           new_cluster:
-            spark_version: 13.3.x-scala2.12
-            node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}
+            cluster_name: ""
+            spark_version: 14.3.x-cpu-ml-scala2.12
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*, 4]  
+            {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}
+            azure_attributes:
+            {% else -%}
+            aws_attributes:
+            {% endif %}
+              first_on_demand: 1  
+              availability: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}ON_DEMAND_AZURE{% else -%}SPOT_WITH_FALLBACK{% endif %}  
+            node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}  
+            driver_node_type_id: {% if 'azuredatabricks.net' in cookiecutter.databricks_host %}Standard_D3_v2{% else -%}m4.xlarge{% endif %}  
+            enable_elastic_disk: true
+            {% if cookiecutter.databricks_cluster_policy_id != '' %}
+            policy_id: {{ cookiecutter.databricks_cluster_policy_id }}
+            {% endif %}
+            data_security_mode: SINGLE_USER
+            runtime_engine: STANDARD
+            num_workers: 0
 
-            autoscale:
-              min_workers: 1
-              max_workers: 2
+      tags:
+        category: data ingestion
+        env: ${var.env_tag}
+        type: core data
+
+      queue:
+        enabled: true
+
+      parameters:
+        - name: env
+          default: ${var.env_tag}
+      

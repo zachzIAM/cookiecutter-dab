@@ -7,11 +7,11 @@ def is_snake_case(value: str) -> bool:
     return bool(re.match(snake_case_pattern, value))
 
 
-package_name = "{{ cookiecutter.package_name }}"
+if __name__ == "__main__":
+    package_name = "{{ cookiecutter.package_name }}"
 
-if not is_snake_case(package_name):
-    print(
-        f"ERROR: {package_name} is not a valid package name. Make sure you are using snakecase notation"
-    )
-
-    sys.exit(1)
+    if not is_snake_case(package_name):
+        print(
+            f"ERROR: {package_name} is not a valid package name. Make sure you are using snakecase notation"
+        )
+        sys.exit(1)
